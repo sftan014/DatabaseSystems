@@ -1,0 +1,49 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 200
+SQL> SET SERVEROUTPUT ON
+SQL> 
+SQL> CREATE OR REPLACE TRIGGER displayTrigger
+  2  BEFORE INSERT OR UPDATE ON customer
+  3  FOR EACH ROW
+  4  WHEN (new.c_comment IS null)
+  5  
+  6  BEGIN
+  7  	     :new.c_comment := 'New customer was created on: ' || SYSDATE || '.';
+  8  END;
+  9  /
+
+Trigger created.
+
+SQL> show error
+No errors.
+SQL> 
+SQL> INSERT INTO customer
+  2  (c_custkey, c_name, c_address, c_nationkey, c_phone, c_acctbal, c_mktsegment, c_comment)
+  3  VALUES (45123, 'namename', 'addadd', 8, 123456789, 123.45, 'furniture', NULL);
+
+1 row created.
+
+SQL> 
+SQL> SELECT * FROM customer WHERE c_custkey = 45123;
+
+ C_CUSTKEY C_NAME                    C_ADDRESS                                C_NATIONKEY           
+---------- ------------------------- ---------------------------------------- -----------           
+C_PHONE          C_ACCTBAL C_MKTSEGME                                                               
+--------------- ---------- ----------                                                               
+C_COMMENT                                                                                           
+----------------------------------------------------------------------------------------------------
+     45123 namename                  addadd                                             8           
+123456789           123.45 furniture                                                                
+New customer was created on: 13-NOV-21.                                                             
+                                                                                                    
+
+1 row selected.
+
+SQL> 
+SQL> DELETE FROM customer where c_custkey = 45123;
+
+1 row deleted.
+
+SQL> SPOOL OFF

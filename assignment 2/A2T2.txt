@@ -1,0 +1,101 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 200
+SQL> SET SERVEROUTPUT ON
+SQL> 
+SQL> CREATE OR REPLACE function lowHighCost(pKey IN PARTSUPP.ps_partkey%type) return varchar2
+  2  IS
+  3  lowCost varchar2 (100);
+  4  highCost varchar2 (100);
+  5  outputting varchar2(2000) := '';
+  6  
+  7  BEGIN
+  8  	     SELECT min(ps_supplycost) INTO lowCost FROM partsupp WHERE ps_partkey = pKey;
+  9  
+ 10  	     FOR lcost IN (SELECT ps_suppkey, s_suppkey, s_name FROM partsupp JOIN supplier
+ 11  					     ON partsupp.ps_suppkey = supplier.s_suppkey
+ 12  					     WHERE ps_supplycost = lowCost AND ps_partkey = pKey) loop
+ 13  
+ 14  			     outputting := outputting ||chr(10)
+ 15  						     || 'Supplier supplying part ' || pKey
+ 16  						     || ' with cheapest cost is/are: '
+ 17  						     || lcost.ps_suppkey || ', '
+ 18  						     || lcost.s_name || ', '
+ 19  						     || '$' || round(lowCost,2) || '.';
+ 20  
+ 21  	     END loop;
+ 22  
+ 23  
+ 24  	     SELECT max(ps_supplycost) INTO highCost FROM partsupp WHERE ps_partkey = pKey;
+ 25  
+ 26  	     FOR hcost IN (SELECT ps_suppkey, s_suppkey, s_name FROM partsupp JOIN supplier
+ 27  					     ON partsupp.ps_suppkey = supplier.s_suppkey
+ 28  					     WHERE ps_supplycost = highCost AND ps_partkey = pKey) loop
+ 29  
+ 30  			     outputting := outputting || chr(10)
+ 31  						     || 'Supplier supplying part ' || pKey
+ 32  						     || ' with highest cost is/are: '
+ 33  						     || hcost.ps_suppkey || ', '
+ 34  						     || hcost.s_name || ', '
+ 35  						     || '$' || round(highCost,2) || '.';
+ 36  	     END loop;
+ 37  --------------------------------------------------------------
+ 38  	     RETURN outputting;
+ 39  END lowHighCost;
+ 40  /
+
+Function created.
+
+SQL> SHOW error
+No errors.
+SQL> 
+SQL> -- test codes here
+SQL> SELECT lowHighCost('3753') from dual;
+
+LOWHIGHCOST('3753')                                                                                 
+----------------------------------------------------------------------------------------------------
+                                                                                                    
+Supplier supplying part 3753 with cheapest cost is/are: 754, Supplier#000000754       , $305.95.    
+Supplier supplying part 3753 with cheapest cost is/are: 2256, Supplier#000002256       , $305.95.   
+Supplier supplying part 3753 with highest cost is/are: 1505, Supplier#000001505       , $457.1.     
+                                                                                                    
+
+1 row selected.
+
+SQL> SELECT lowHighCost('43064') from dual;
+
+LOWHIGHCOST('43064')                                                                                
+----------------------------------------------------------------------------------------------------
+                                                                                                    
+Supplier supplying part 43064 with cheapest cost is/are: 1065, Supplier#000001065       , $667.3.   
+Supplier supplying part 43064 with cheapest cost is/are: 1829, Supplier#000001829       , $667.3.   
+Supplier supplying part 43064 with highest cost is/are: 357, Supplier#000000357       , $848.13.    
+                                                                                                    
+
+1 row selected.
+
+SQL> SELECT lowHighCost('57574') from dual;
+
+LOWHIGHCOST('57574')                                                                                
+----------------------------------------------------------------------------------------------------
+                                                                                                    
+Supplier supplying part 57574 with cheapest cost is/are: 1344, Supplier#000001344       , $172.09.  
+Supplier supplying part 57574 with highest cost is/are: 2882, Supplier#000002882       , $791.07.   
+                                                                                                    
+
+1 row selected.
+
+SQL> SELECT lowHighCost('60000') from dual;
+
+LOWHIGHCOST('60000')                                                                                
+----------------------------------------------------------------------------------------------------
+                                                                                                    
+Supplier supplying part 60000 with cheapest cost is/are: 770, Supplier#000000770       , $74.55.    
+Supplier supplying part 60000 with highest cost is/are: 2308, Supplier#000002308       , $826.35.   
+                                                                                                    
+
+1 row selected.
+
+SQL> 
+SQL> SPOOL OFF

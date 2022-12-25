@@ -1,0 +1,185 @@
+SQL> SET ECHO ON
+SQL> SET FEEDBACK ON
+SQL> SET LINESIZE 100
+SQL> SET PAGESIZE 200
+SQL> SET SERVEROUTPUT ON
+SQL> 
+SQL> -- region name = rName
+SQL> CREATE OR REPLACE procedure supplierAccBal(rName IN REGION.r_name%type, minNum number, maxNum number)
+  2  IS
+  3  avgNum varchar2(100);
+  4  
+  5  BEGIN
+  6  
+  7  	     -- User specify Region
+  8  	     FOR n IN (SELECT n_name FROM nation
+  9  				     JOIN region
+ 10  				     ON nation.n_regionkey = region.r_regionkey
+ 11  				     WHERE rName = region.r_name
+ 12  				     ORDER BY n_name) loop
+ 13  
+ 14  		     --dbms_output.put_line(chr(10)); -- New line
+ 15  		     dbms_output.put_line(chr(10)); -- New line
+ 16  		     dbms_output.put_line ('Nation Name: ' || n.n_name);
+ 17  		     dbms_output.put_line(chr(5)); -- New line
+ 18  		     dbms_output.put_line(chr(9) || rpad('Supplier Name', 20)
+ 19  											      || rpad('Supplier Phone', 20)
+ 20  											      || rpad('Account Balance',20)
+ 21  											      || chr(10)
+ 22  											      || rpad('Comment',20)
+ 23  											     );
+ 24  		     --dbms_output.put_line(chr(10)); -- New line
+ 25  
+ 26  		     -- User specify range
+ 27  		     FOR sn IN (SELECT s_name, s_phone, s_acctbal
+ 28  						     FROM supplier JOIN nation ON s_nationkey = n_nationkey
+ 29  						     WHERE n_name = n.n_name) loop
+ 30  
+ 31  			     IF sn.s_acctbal BETWEEN minNum AND maxNum THEN
+ 32  
+ 33  				     SELECT avg(s_acctbal) INTO avgNum FROM supplier
+ 34  				     JOIN nation ON s_nationkey = n_nationkey WHERE n_name = n.n_name;
+ 35  
+ 36  					     IF sn.s_acctbal < avgNum THEN
+ 37  						     dbms_output.put_line(chr(9) || rpad(sn.s_name, 20)
+ 38  												      || rpad(sn.s_phone, 20)
+ 39  												      || '$'
+ 40  												      || rpad(sn.s_acctbal, 20)
+ 41  												      || 'The account balance is BELOW the nation average of $'
+ 42  												      || round(avgNum, 2));
+ 43  
+ 44  					     ELSE
+ 45  						     dbms_output.put_line(chr(9) || rpad(sn.s_name, 20)
+ 46  												      || rpad(sn.s_phone, 20)
+ 47  												      || '$'
+ 48  												      || rpad(sn.s_acctbal, 20));
+ 49  
+ 50  						     dbms_output.put_line('The account balance is ABOVE the nation average of $'
+ 51  												      || round(avgNum, 2) );
+ 52  					     END if;
+ 53  
+ 54  			     END if;
+ 55  		     END loop;
+ 56  	     END loop;
+ 57  
+ 58  EXCEPTION
+ 59  		     WHEN no_data_found THEN
+ 60  			     dbms_output.put_line('No data found!');
+ 61  		     WHEN others THEN
+ 62  			     dbms_output.put_line('Error!');
+ 63  
+ 64  --------------------------------------------------------------
+ 65  
+ 66  END supplierAccBal;
+ 67  /
+
+Procedure created.
+
+SQL> SHOW error
+No errors.
+SQL> 
+SQL> -- test codes here
+SQL> EXECUTE supplierAccBal('ASIA', 4500, 5000);
+
+                                                                                                   
+Nation Name: CHINA                                                                                  
+                                                                                                   
+	Supplier Name       Supplier Phone      Account Balance     
+Comment                               
+	Supplier#000002742  28-884-467-8595     $4571.04                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000001976  28-244-422-3128     $4911.27                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000002402  28-116-664-4294     $4724.36                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000002263  28-438-817-3756     $4903.47                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000002325  28-167-932-2440     $4875.37                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000002631  28-153-887-4167     $4658.15                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000000117  28-470-879-3141     $4589.18                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000000196  28-430-406-1127     $4710.62                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000000255  28-629-327-4139     $4663.08                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000000724  28-471-255-1476     $4696.62                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+	Supplier#000001221  28-332-756-9313     $4533.75                                                   
+The account balance is ABOVE the nation average of $4369.32                                         
+
+                                                                                                   
+Nation Name: INDIA                                                                                  
+                                                                                                   
+	Supplier Name       Supplier Phone      Account Balance     
+Comment                               
+	Supplier#000001320  18-732-433-1443     $4925.36                                                   
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000000303  18-932-912-3102     $4500.9              The account balance is BELOW the      
+nation average of $4554.48                                                                          
+	Supplier#000000060  18-550-360-2464     $4515.8              The account balance is BELOW the      
+nation average of $4554.48                                                                          
+	Supplier#000000136  18-175-739-8397     $4623.48                                                   
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000002156  18-105-354-2253     $4617.7                                                    
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000002246  18-257-298-6662     $4801.02                                                   
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000001799  18-642-860-9158     $4648.72                                                   
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000001516  18-431-532-9957     $4755.71                                                   
+The account balance is ABOVE the nation average of $4554.48                                         
+	Supplier#000001906  18-738-147-3630     $4978.1                                                    
+The account balance is ABOVE the nation average of $4554.48                                         
+
+                                                                                                   
+Nation Name: INDONESIA                                                                              
+                                                                                                   
+	Supplier Name       Supplier Phone      Account Balance     
+Comment                               
+	Supplier#000001048  19-493-938-3406     $4694.02                                                   
+The account balance is ABOVE the nation average of $4539.48                                         
+	Supplier#000000050  19-561-560-7437     $4515.87             The account balance is BELOW the      
+nation average of $4539.48                                                                          
+	Supplier#000002801  19-733-439-2229     $4772.52                                                   
+The account balance is ABOVE the nation average of $4539.48                                         
+	Supplier#000001827  19-477-545-3938     $4919.94                                                   
+The account balance is ABOVE the nation average of $4539.48                                         
+	Supplier#000001542  19-766-450-1320     $4668.72                                                   
+The account balance is ABOVE the nation average of $4539.48                                         
+
+                                                                                                   
+Nation Name: JAPAN                                                                                  
+                                                                                                   
+	Supplier Name       Supplier Phone      Account Balance     
+Comment                               
+	Supplier#000002168  22-144-605-9504     $4616.71             The account balance is BELOW the      
+nation average of $4705.99                                                                          
+
+                                                                                                   
+Nation Name: VIETNAM                                                                                
+                                                                                                   
+	Supplier Name       Supplier Phone      Account Balance     
+Comment                               
+	Supplier#000001742  31-253-408-5060     $4627.46                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000002655  31-276-987-1638     $4856.74                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000002677  31-596-125-8311     $4980.7                                                    
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000002520  31-826-707-8432     $4965.26                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000002995  31-224-848-8404     $4614.07                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000000400  31-514-285-7013     $4624.87                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000001318  31-779-241-5392     $4839.36                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+	Supplier#000001351  31-971-224-5549     $4647.09                                                   
+The account balance is ABOVE the nation average of $4010.78                                         
+
+PL/SQL procedure successfully completed.
+
+SQL> 
+SQL> SPOOL OFF
